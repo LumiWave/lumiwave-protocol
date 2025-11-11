@@ -18,6 +18,8 @@ faucet:
 validators:
 - name: pdx-test-yangjae
   bonded: 500000000LWA
+  app:
+    minimum-gas-prices: "0.025LWA"
   config:
     moniker: "pdx-validator"
 - name: pdx-test-inno
