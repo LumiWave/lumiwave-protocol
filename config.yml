@@ -12,9 +12,9 @@ client:
   openapi:
     path: docs/static/openapi.json
 faucet:
-  name: bob
+  name: pdx-test-faucet
   coins:
-  - 100000LWA
+  - 5LWA
 validators:
 - name: pdx-test-yangjae
   bonded: 500000000LWA
