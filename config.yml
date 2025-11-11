@@ -1,0 +1,24 @@
+version: 1
+validation: sovereign
+default_denom: LWA
+accounts: 
+- name: pdx-test-yangjae
+  coins:
+  - 1000000000LWA
+- name: pdx-test-faucet
+  coins:
+  - 100000000LWA
+client:
+  openapi:
+    path: docs/static/openapi.json
+faucet:
+  name: bob
+  coins:
+  - 100000LWA
+validators:
+- name: pdx-test-yangjae
+  bonded: 500000000LWA
+  config:
+    moniker: "pdx-validator"
+- name: pdx-test-inno
+  bonded: 100000000LWA

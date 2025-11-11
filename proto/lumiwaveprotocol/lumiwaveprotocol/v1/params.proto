@@ -1,0 +1,13 @@
+syntax = "proto3";
+package lumiwaveprotocol.lumiwaveprotocol.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "lumiwaveprotocol/x/lumiwaveprotocol/Params";
+  option (gogoproto.equal) = true;
+}
