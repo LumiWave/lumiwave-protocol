@@ -22,8 +22,5 @@ validators:
     minimum-gas-prices: "0.025LWA"
   config:
     moniker: "pdx-validator"
-    rpc:
-      tls_cert_file: "/etc/ssl/certs/lumiwavelab.crt"
-      tls_key_file: "/etc/ssl/private/lumiwavelab.key"
 - name: pdx-test-inno
   bonded: 100000000LWA
