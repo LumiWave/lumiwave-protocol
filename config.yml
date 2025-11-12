@@ -21,6 +21,8 @@ validators:
   bonded: 5000000000000000LWA
   app:
     minimum-gas-prices: "0.000001LWA"
+  state-sync:
+    snapshot-interval: 1000
   config:
     moniker: "pdx-validator"
 - name: pdx-test-inno
