@@ -25,5 +25,3 @@ validators:
       snapshot-interval: "1000"
   config:
     moniker: "pdx-validator"
-- name: pdx-test-inno
-  bonded: 100000000LWA
