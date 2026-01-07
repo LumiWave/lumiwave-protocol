@@ -46,7 +46,7 @@
           "address": "lumi1pmn62y2zan2adal3kvtj8nsf3g286sk6wne38r",
           "coins": [
             {
-              "denom": "LWA",
+              "denom": "LWP",
               "amount": "100000000000000"
             }
           ]
@@ -55,7 +55,7 @@
           "address": "lumi1muvlrn9vjgxcjn9vzvkmudsezg35aph5rmdv4m",
           "coins": [
             {
-              "denom": "LWA",
+              "denom": "LWP",
               "amount": "10000000000000000"
             }
           ]
@@ -63,7 +63,7 @@
       ],
       "supply": [
         {
-          "denom": "LWA",
+          "denom": "LWP",
           "amount": "10100000000000000"
         }
       ],
@@ -167,7 +167,7 @@
                   "key": "W9yUv8ddur4BiXv/G3QgD6mxnnmzg8S8/zzUdYdabpM="
                 },
                 "value": {
-                  "denom": "LWA",
+                  "denom": "LWP",
                   "amount": "5000000000000000"
                 }
               }
@@ -219,7 +219,7 @@
         "expedited_min_deposit": [
           {
             "amount": "50000000",
-            "denom": "LWA"
+            "denom": "LWP"
           }
         ],
         "expedited_threshold": "0.667000000000000000",
@@ -228,7 +228,7 @@
         "min_deposit": [
           {
             "amount": "10000000",
-            "denom": "LWA"
+            "denom": "LWP"
           }
         ],
         "min_deposit_ratio": "0.010000000000000000",
@@ -333,7 +333,7 @@
         "inflation_max": "0.200000000000000000",
         "inflation_min": "0.070000000000000000",
         "inflation_rate_change": "0.130000000000000000",
-        "mint_denom": "LWA"
+        "mint_denom": "LWP"
       }
     },
     "nft": {
@@ -359,7 +359,7 @@
       "last_total_power": "0",
       "last_validator_powers": [],
       "params": {
-        "bond_denom": "LWA",
+        "bond_denom": "LWP",
         "historical_entries": 10000,
         "max_entries": 7,
         "max_validators": 100,

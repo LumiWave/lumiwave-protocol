@@ -1,26 +1,26 @@
 version: 1
 validation: sovereign
-default_denom: LWA
+default_denom: LWP
 accounts: 
 - name: pdx-test-yangjae
   coins:
-  - 10000000000000000LWA
+  - 10000000000000000LWP
 - name: pdx-test-faucet
   coins:
-  - 100000000000000LWA
+  - 100000000000000LWP
 client:
   openapi:
     path: docs/static/openapi.json
 faucet:
   name: pdx-test-faucet
   coins:
-  - 5000000LWA
-  tx_fee: "1LWA"
+  - 5000000LWP
+  tx_fee: "1LWP"
 validators:
 - name: pdx-test-yangjae
-  bonded: 5000000000000000LWA
+  bonded: 5000000000000000LWP
   app:
-    minimum-gas-prices: "0.000001LWA"
+    minimum-gas-prices: "0.000001LWP"
     pruning: "custom"
     pruning-keep-recent: "100"
     pruning-interval: "10"
@@ -32,3 +32,8 @@ validators:
       swagger: true
   config:
     moniker: "pdx-validator"
+    tx_index:
+      indexer: "null"
+    instrumentation:
+      prometheus: true
+
