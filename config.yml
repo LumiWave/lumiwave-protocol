@@ -21,7 +21,14 @@ validators:
   bonded: 5000000000000000LWA
   app:
     minimum-gas-prices: "0.000001LWA"
+    pruning: "custom"
+    pruning-keep-recent: "100"
+    pruning-interval: "10"
+    pruning-keep-every: "0"
     state-sync:
       snapshot-interval: "1000"
+    api:
+      enable: true
+      swagger: true
   config:
     moniker: "pdx-validator"

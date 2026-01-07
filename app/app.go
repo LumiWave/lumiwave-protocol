@@ -9,9 +9,12 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -101,6 +104,8 @@ type App struct {
 	// simulation manager
 	sm                     *module.SimulationManager
 	LumiwaveprotocolKeeper lumiwaveprotocolmodulekeeper.Keeper
+	WasmKeeper             wasmkeeper.Keeper
+	FeeGrantKeeper         feegrantkeeper.Keeper
 }
 
 func init() {
@@ -173,7 +178,7 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
-		&app.LumiwaveprotocolKeeper,
+		&app.LumiwaveprotocolKeeper, &app.FeeGrantKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -212,6 +217,9 @@ func New(
 	})
 
 	if err := app.Load(loadLatest); err != nil {
+		panic(err)
+	}
+	if err := app.WasmKeeper.InitializePinnedCodes(app.NewUncachedContext(true, tmproto.Header{})); err != nil {
 		panic(err)
 	}
 

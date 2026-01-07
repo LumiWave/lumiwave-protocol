@@ -36,6 +36,7 @@ import (
 	_ "cosmossdk.io/x/nft/module" // import for side-effects
 	_ "cosmossdk.io/x/upgrade"    // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	_ "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/module"
 	lumiwaveprotocolmoduletypes "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -83,7 +84,7 @@ var (
 		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: icatypes.ModuleName},
-	}
+		{Account: wasmtypes.ModuleName, Permissions: []string{authtypes.Burner}}}
 
 	// blocked account addresses
 	blockAccAddrs = []string{
@@ -126,6 +127,7 @@ var (
 						ibcexported.ModuleName,
 						// chain modules
 						lumiwaveprotocolmoduletypes.ModuleName,
+						wasmtypes.ModuleName,
 						// this line is used by starport scaffolding # stargate/app/beginBlockers
 					},
 					EndBlockers: []string{
@@ -135,6 +137,7 @@ var (
 						group.ModuleName,
 						// chain modules
 						lumiwaveprotocolmoduletypes.ModuleName,
+						wasmtypes.ModuleName,
 						// this line is used by starport scaffolding # stargate/app/endBlockers
 					},
 					// The following is mostly only needed when ModuleName != StoreKey name.
@@ -172,6 +175,7 @@ var (
 						icatypes.ModuleName,
 						// chain modules
 						lumiwaveprotocolmoduletypes.ModuleName,
+						wasmtypes.ModuleName,
 						// this line is used by starport scaffolding # stargate/app/initGenesis
 					},
 				}),
