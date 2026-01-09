@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"io"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -48,6 +49,7 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/LumiWave/lumiwave-protocol/docs"
 	lumiwaveprotocolmodulekeeper "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/keeper"
 )
@@ -216,6 +218,8 @@ func New(
 		return app.App.InitChainer(ctx, req)
 	})
 
+	app.setupUpgradeHandlers()
+
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
@@ -224,6 +228,44 @@ func New(
 	}
 
 	return app
+}
+func (app *App) setupUpgradeHandlers() {
+
+	// v1 핸들러 (유지)
+	// app.UpgradeKeeper.SetUpgradeHandler("v1-upgrade-lumiwaveprotocol", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	// 	// v0.53+ 에서는 context.Context를 sdk.Context로 변환합니다.
+	// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// 	// app.mm 대신 app.ModuleManager, app.configurator 대신 app.Configurator 확인
+	// 	// 만약 필드명이 다르다면 본인의 App 구조체(struct) 정의 부분을 확인해야 합니다.
+	// 	return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
+	// })
+
+	// v1 핸들러 추가
+	upgradeName := "v1-upgrade-lumiwaveprotocol"
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		upgradeName,
+		func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// v0.53+ 에서는 context.Context를 sdk.Context로 변환합니다.
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+			// app.mm 대신 app.ModuleManager, app.configurator 대신 app.Configurator 확인
+			// 만약 필드명이 다르다면 본인의 App 구조체(struct) 정의 부분을 확인해야 합니다.
+			return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
+		},
+	)
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if upgradeInfo.Name == upgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// storetypes 패키지 사용
+		storeUpgrades := storetypes.StoreUpgrades{}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
 
 // GetSubspace returns a param subspace for a given module name.
