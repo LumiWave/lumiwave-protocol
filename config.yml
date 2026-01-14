@@ -1,26 +1,42 @@
 version: 1
 validation: sovereign
-default_denom: LWP
+# 1. 기본 단위를 ulwp로 설정 (가장 작은 단위)
+default_denom: ulwp
+# 2. 메타데이터 추가 (LWP 심볼과 소수점 6자리 정의)
+genesis:
+  app_state:
+    bank:
+      denom_metadata:
+        - description: "The native coin of LumiWave Protocol"
+          denom_units:
+            - denom: ulwp
+              exponent: 0
+              aliases: ["microlwp"]
+            - denom: LWP
+              exponent: 6
+          base: ulwp
+          display: LWP
+          name: "LumiWave Protocol Coin"
+          symbol: LWP
 accounts: 
-- name: pdx-test-yangjae
-  coins:
-  - 10000000000000000LWP
-- name: pdx-test-faucet
-  coins:
-  - 100000000000000LWP
+# 초기 유통 물량 (1억 LWP)
+  - name: pdx-test-yangjae
+    coins: ["770075466000000ulwp"]
+  - name: pdx-test-faucet
+    coins:
+      - 100000000000ulwp
 client:
   openapi:
     path: docs/static/openapi.json
 faucet:
   name: pdx-test-faucet
-  coins:
-  - 5000000LWP
-  tx_fee: "1LWP"
+  coins: ["5000000ulwp"]
+  tx_fee: "1000ulwp" # 가스비도 최소 단위인 ulwp로 표기
 validators:
 - name: pdx-test-yangjae
-  bonded: 5000000000000000LWP
+  bonded: 5000000000000ulwp
   app:
-    minimum-gas-prices: "0.000001LWP"
+    minimum-gas-prices: "0.025ulwp"
     pruning: "custom"
     pruning-keep-recent: "100"
     pruning-interval: "10"
