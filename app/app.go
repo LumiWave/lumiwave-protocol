@@ -229,29 +229,25 @@ func New(
 
 	return app
 }
+
 func (app *App) setupUpgradeHandlers() {
 
-	// v1 핸들러 (유지)
+	// v1 handler (keep)
 	// app.UpgradeKeeper.SetUpgradeHandler("v1-upgrade-lumiwaveprotocol", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-	// 	// v0.53+ 에서는 context.Context를 sdk.Context로 변환합니다.
 	// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// 	// app.mm 대신 app.ModuleManager, app.configurator 대신 app.Configurator 확인
-	// 	// 만약 필드명이 다르다면 본인의 App 구조체(struct) 정의 부분을 확인해야 합니다.
+	// 	// Check app.ModuleManager and app.Configurator fields
+	// 	// If field names differ, verify your App struct definition
 	// 	return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
 	// })
 
-	// v1 핸들러 추가
+	// v1 handler addition
 	upgradeName := "v1-upgrade-lumiwaveprotocol"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeName,
 		func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			// v0.53+ 에서는 context.Context를 sdk.Context로 변환합니다.
 			sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-			// app.mm 대신 app.ModuleManager, app.configurator 대신 app.Configurator 확인
-			// 만약 필드명이 다르다면 본인의 App 구조체(struct) 정의 부분을 확인해야 합니다.
 			return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
 		},
 	)
@@ -262,7 +258,7 @@ func (app *App) setupUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == upgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		// storetypes 패키지 사용
+		// Use storetypes package
 		storeUpgrades := storetypes.StoreUpgrades{}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
