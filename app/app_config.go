@@ -84,7 +84,9 @@ var (
 		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: icatypes.ModuleName},
-		{Account: wasmtypes.ModuleName, Permissions: []string{authtypes.Burner}}}
+		{Account: wasmtypes.ModuleName, Permissions: []string{authtypes.Burner}},
+		{Account: lumiwaveprotocolmoduletypes.ModuleName, Permissions: []string{authtypes.Minter}},
+	}
 
 	// blocked account addresses
 	blockAccAddrs = []string{
@@ -96,6 +98,7 @@ var (
 		nft.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
+		lumiwaveprotocolmoduletypes.ModuleName,
 	}
 
 	// application configuration (used by depinject)

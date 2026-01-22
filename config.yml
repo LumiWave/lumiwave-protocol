@@ -1,7 +1,7 @@
 version: 1
 validation: sovereign
-# 1. 기본 단위를 ulwp로 설정 (가장 작은 단위)
-default_denom: ulwp
+# 1. 기본 단위를 alwp로 설정 (atto-lwp, 10^-18)
+default_denom: alwp
 # 2. 메타데이터 추가 (LWP 심볼과 소수점 6자리 정의)
 genesis:
   app_state:
@@ -9,34 +9,47 @@ genesis:
       denom_metadata:
         - description: "The native coin of LumiWave Protocol"
           denom_units:
-            - denom: ulwp
+            - denom: alwp
               exponent: 0
-              aliases: ["microlwp"]
+              aliases: ["attolwp"]
             - denom: LWP
               exponent: 6
-          base: ulwp
+          base: alwp
           display: LWP
           name: "LumiWave Protocol Coin"
           symbol: LWP
+    mint:
+      params:
+        mint_denom: "alwp"
+        inflation_max: "0.344100000000000000" # 인플레이션 최대치 0
+        inflation_min: "0.000000000000000000" # 인플레이션 최소치 0
+        inflation_rate_change: "0.344100000000000000"
+        goal_bonded: "0.670000000000000000"
+        blocks_per_year: "6307200" # test : 12s, real : 6307200
+      minter:
+        inflation: "0.344100000000000000" # 현재 인플레이션율 0
+    staking:
+      params:
+        bond_denom: "alwp" # 스테이킹 단위도 alwp로 일치
 accounts: 
 # 초기 유통 물량 (1억 LWP)
   - name: pdx-test-yangjae
-    coins: ["770075466000000ulwp"]
+    coins: ["770075466000000000000000000alwp"]
   - name: pdx-test-faucet
     coins:
-      - 100000000000ulwp
+      - 100000000000000000000000alwp
 client:
   openapi:
     path: docs/static/openapi.json
 faucet:
   name: pdx-test-faucet
-  coins: ["5000000ulwp"]
-  tx_fee: "1000ulwp" # 가스비도 최소 단위인 ulwp로 표기
+  coins: ["5000000000000000000000000alwp"]
+  tx_fee: "10000000000000000alwp" # 약 0.01 LWP
 validators:
 - name: pdx-test-yangjae
-  bonded: 5000000000000ulwp
+  bonded: "500000000000000000000000alwp"
   app:
-    minimum-gas-prices: "0.025ulwp"
+    minimum-gas-prices: "1000000000alwp"
     pruning: "custom"
     pruning-keep-recent: "100"
     pruning-interval: "10"
@@ -52,4 +65,10 @@ validators:
       indexer: "null"
     instrumentation:
       prometheus: true
+    consensus:
+      # 블록 생성 간격을 결정하는 핵심 파라미터들입니다.
+      timeout_propose: "3s"
+      timeout_prevote: "1s"
+      timeout_precommit: "1s"
+      timeout_commit: "5s"  # 여기서 실제 블록 생성 주기가 약 5~6초로 결정됩니다.
 

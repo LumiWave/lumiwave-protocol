@@ -11,6 +11,7 @@ import (
 
 	"github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/keeper"
 	"github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -35,6 +36,7 @@ type ModuleInputs struct {
 
 	AuthKeeper types.AuthKeeper
 	BankKeeper types.BankKeeper
+	MintKeeper mintkeeper.Keeper
 }
 
 type ModuleOutputs struct {
@@ -56,7 +58,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AddressCodec,
 		authority,
 	)
-	m := NewAppModule(in.Cdc, k, in.AuthKeeper, in.BankKeeper)
+	m := NewAppModule(in.Cdc, k, in.AuthKeeper, in.BankKeeper, in.MintKeeper)
 
 	return ModuleOutputs{LumiwaveprotocolKeeper: k, Module: m}
 }
