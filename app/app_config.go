@@ -71,6 +71,10 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
+	_ "github.com/cosmos/cosmos-sdk/x/protocolpool"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 var (
@@ -86,12 +90,16 @@ var (
 		{Account: icatypes.ModuleName},
 		{Account: wasmtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: lumiwaveprotocolmoduletypes.ModuleName, Permissions: []string{authtypes.Minter}},
+		{Account: protocolpooltypes.ModuleName},
+		{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 	}
 
 	// blocked account addresses
 	blockAccAddrs = []string{
 		authtypes.FeeCollectorName,
 		distrtypes.ModuleName,
+		protocolpooltypes.ModuleName,
+		protocolpooltypes.ProtocolPoolEscrowAccount,
 		minttypes.ModuleName,
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
@@ -121,6 +129,7 @@ var (
 					BeginBlockers: []string{
 						minttypes.ModuleName,
 						distrtypes.ModuleName,
+						protocolpooltypes.ModuleName,
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
@@ -138,6 +147,7 @@ var (
 						stakingtypes.ModuleName,
 						feegrant.ModuleName,
 						group.ModuleName,
+						protocolpooltypes.ModuleName,
 						// chain modules
 						lumiwaveprotocolmoduletypes.ModuleName,
 						wasmtypes.ModuleName,
@@ -158,6 +168,7 @@ var (
 						authtypes.ModuleName,
 						banktypes.ModuleName,
 						distrtypes.ModuleName,
+						protocolpooltypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
 						govtypes.ModuleName,
@@ -179,6 +190,7 @@ var (
 						// chain modules
 						lumiwaveprotocolmoduletypes.ModuleName,
 						wasmtypes.ModuleName,
+
 						// this line is used by starport scaffolding # stargate/app/initGenesis
 					},
 				}),
@@ -231,6 +243,10 @@ var (
 			{
 				Name:   distrtypes.ModuleName,
 				Config: appconfig.WrapAny(&distrmodulev1.Module{}),
+			},
+			{
+				Name:   protocolpooltypes.ModuleName, // "protocolpool"
+				Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
 			},
 			{
 				Name:   evidencetypes.ModuleName,

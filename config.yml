@@ -31,6 +31,12 @@ genesis:
     staking:
       params:
         bond_denom: "alwp" # 스테이킹 단위도 alwp로 일치
+    distribution:
+      params:
+        community_tax: "0.917000000000000000"
+        base_proposer_reward: "0.000000000000000000"
+        bonus_proposer_reward: "0.000000000000000000"
+        withdraw_addr_enabled: true
 accounts: 
 # 초기 유통 물량 (1억 LWP)
   - name: pdx-test-yangjae
