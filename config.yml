@@ -31,6 +31,12 @@ genesis:
     staking:
       params:
         bond_denom: "alwp" # 스테이킹 단위도 alwp로 일치
+    distribution:
+      params:
+        community_tax: "0.917000000000000000"
+        base_proposer_reward: "0.000000000000000000"
+        bonus_proposer_reward: "0.000000000000000000"
+        withdraw_addr_enabled: true
 accounts: 
 # 초기 유통 물량 (1억 LWP)
   - name: pdx-test-yangjae
@@ -51,18 +57,21 @@ validators:
   app:
     minimum-gas-prices: "1000000000alwp"
     pruning: "custom"
-    pruning-keep-recent: "100"
-    pruning-interval: "10"
-    pruning-keep-every: "0"
+    pruning-keep-recent: "100000"
+    pruning-interval: "100"
+    pruning-keep-every: "432000"
     state-sync:
-      snapshot-interval: "1000"
+      snapshot-interval: "2000"
     api:
       enable: true
       swagger: true
+    telemetry:
+      enabled: true
+      prometheus-retention-time: "60"
   config:
     moniker: "pdx-validator"
     tx_index:
-      indexer: "null"
+      indexer: "kv"
     instrumentation:
       prometheus: true
     consensus:
