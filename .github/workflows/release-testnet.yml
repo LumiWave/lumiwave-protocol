@@ -16,7 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: testnet
+          ref: ${{ github.ref }}
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:

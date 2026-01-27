@@ -55,7 +55,7 @@ validators:
 - name: pdx-testnet-1
   bonded: "500000000000ulwp"
   app:
-    minimum-gas-prices: "0.001ulwp"
+    minimum-gas-prices: "0.025ulwp"
     pruning: "custom"
     pruning-keep-recent: "100000"
     pruning-interval: "100"
