@@ -3,7 +3,7 @@ name: release-mainnet
 on:
   push:
     tags:
-      - "mainnet-v*"
+      - "v*-mainnet"
   workflow_dispatch:
 
 permissions:

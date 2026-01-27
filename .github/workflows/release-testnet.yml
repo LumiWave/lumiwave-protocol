@@ -4,7 +4,7 @@ on:
   push:
     branches: [testnet]
     tags:
-      - "testnet-v*"
+      - "v*-testnet"
   workflow_dispatch:
 
 permissions:
