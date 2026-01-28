@@ -14,10 +14,13 @@ builds:
     env:
       - CGO_ENABLED=0
 
-    # 바이너리 사이즈/링크 시간 감소
     ldflags:
       - -s -w
-
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger
     goos:
       - linux
       - windows
@@ -26,7 +29,6 @@ builds:
       - amd64
       - arm64
 
-    # ✅ Windows arm64 제외
     ignore:
       - goos: windows
         goarch: arm64
