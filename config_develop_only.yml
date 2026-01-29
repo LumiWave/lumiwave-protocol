@@ -37,14 +37,21 @@ genesis:
         base_proposer_reward: "0.000000000000000000"
         bonus_proposer_reward: "0.000000000000000000"
         withdraw_addr_enabled: true
-accounts:
-  - name: pdx-testnet-dummy
-    coins: ["900000000000ulwp"]
+accounts: 
+# Initial supply allocation (Adjusted to ulwp scale)
+  - name: pdx-testnet-1
+    coins: ["770075466000000ulwp"]
+  - name: pdx-testnet-faucet
+    coins: ["100000000000ulwp"]
 client:
   openapi:
     path: docs/static/openapi.json
+faucet:
+  name: pdx-testnet-faucet
+  coins: ["5000000000ulwp"]
+  tx_fee: "10000ulwp" # Approximately 0.01 LWP
 validators:
-- name: pdx-testnet-dummy
+- name: pdx-testnet-1
   bonded: "500000000000ulwp"
   app:
     minimum-gas-prices: "0.025ulwp"
