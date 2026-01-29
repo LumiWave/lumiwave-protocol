@@ -33,5 +33,5 @@ jobs:
             -e COSMWASM_VERSION="v1.5.0" \
             -e TM_VERSION="v0.38.11" \
             goreleaser/goreleaser-cross:v1.25.5-v2.13.3 \
-            goreleaser release --clean
+            release --clean
 
