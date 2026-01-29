@@ -144,7 +144,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: build --clean --config .goreleaser.linux.ci.yaml
+          args: build --snapshot --clean --config .goreleaser.linux.ci.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -266,7 +266,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: build --clean --config .goreleaser.darwin.ci.yaml
+          args: build --snapshot --clean --config .goreleaser.darwin.ci.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
