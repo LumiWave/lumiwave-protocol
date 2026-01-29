@@ -13,19 +13,26 @@ jobs:
   goreleaser:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          go-version: "stable"
+          go-version-file: go.mod
+          cache: true
 
-      - uses: goreleaser/goreleaser-action@v6
-        with:
-          version: "~> v2"
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release (single-shot via goreleaser-cross)
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "${PWD}:/src" \
+            -w /src \
+            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -e COSMWASM_VERSION="v1.5.0" \
+            -e TM_VERSION="v0.38.11" \
+            goreleaser/goreleaser-cross:v1.25.5-v2.13.3 \
+            goreleaser release --clean
 

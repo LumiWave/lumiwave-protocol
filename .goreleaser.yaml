@@ -1,5 +1,11 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 version: 2
+project_name: lumiwave-protocold
+
+env:
+  - CGO_ENABLED=1
+  - COSMWASM_VERSION=v1.5.0
+  - TM_VERSION=v0.38.11
 
 before:
   hooks:
@@ -7,46 +13,119 @@ before:
     - go generate ./...
 
 builds:
-  - id: lumiwave-protocold
+  - id: lumiwave-protocold-linux-amd64
     main: ./cmd/lumiwave-protocold/
     binary: lumiwave-protocold
-
-    env:
-      - CGO_ENABLED=1
-
+    builder: go
+    goos: [linux]
+    goarch: [amd64]
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -o dist/lib/libwasmvm_muslc.x86_64.a
+    env: []
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger]
     ldflags:
       - -s -w
+      - -linkmode=external
+      - -extldflags "-Ldist/lib -lwasmvm_muslc.x86_64 -Wl,-z,muldefs -static -z noexecstack"
       - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
       - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
-      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger
-    goos:
-      - linux
-      - windows
-      - darwin
-    goarch:
-      - amd64
-      - arm64
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
 
-    ignore:
-      - goos: windows
-        goarch: arm64
+  - id: lumiwave-protocold-linux-arm64
+    main: ./cmd/lumiwave-protocold/
+    binary: lumiwave-protocold
+    builder: go
+    goos: [linux]
+    goarch: [arm64]
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -o dist/lib/libwasmvm_muslc.aarch64.a
+    env:
+      - CC=aarch64-linux-gnu-gcc
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger]
+    ldflags:
+      - -s -w
+      - -linkmode=external
+      - -extldflags "-Ldist/lib -lwasmvm_muslc.aarch64 -Wl,-z,muldefs -static -z noexecstack"
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+
+  - id: lumiwave-protocold-darwin-amd64
+    main: ./cmd/lumiwave-protocold/
+    binary: lumiwave-protocold
+    builder: go
+    goos: [darwin]
+    goarch: [amd64]
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -o dist/lib/libwasmvmstatic_darwin.a
+    env:
+      - CC=o64-clang
+      - CGO_LDFLAGS=-Ldist/lib
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger, static_wasm]
+    ldflags:
+      - -s -w
+      - -linkmode=external
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+
+  - id: lumiwave-protocold-darwin-arm64
+    main: ./cmd/lumiwave-protocold/
+    binary: lumiwave-protocold
+    builder: go
+    goos: [darwin]
+    goarch: [arm64]
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -o dist/lib/libwasmvmstatic_darwin.a
+    env:
+      - CC=oa64-clang
+      - CGO_LDFLAGS=-Ldist/lib
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger, static_wasm]
+    ldflags:
+      - -s -w
+      - -linkmode=external
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
 
 archives:
-  - formats: [tar.gz]
-    files:
-      - none*
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    format_overrides:
-      - goos: windows
-        formats: [zip]
+  - formats: [binary]
+    ids:
+      - lumiwave-protocold-linux-amd64
+      - lumiwave-protocold-linux-arm64
+      - lumiwave-protocold-darwin-amd64
+      - lumiwave-protocold-darwin-arm64
+    wrap_in_directory: false
+    files: [none*]
+    name_template: "{{ .Binary }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+checksum:
+  name_template: SHA256SUMS-v{{ .Version }}.txt
+  algorithm: sha256
 
 changelog:
   sort: asc
@@ -56,6 +135,8 @@ changelog:
       - "^test:"
 
 release:
+  prerelease: true
+  name_template: "v{{ .Version }}"
   footer: >-
 
     ---
