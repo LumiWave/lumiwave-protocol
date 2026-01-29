@@ -160,7 +160,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            dist/*linux*
+            dist/*Linux*.tar.gz
             dist/SHA256SUMS-${{ github.ref_name }}-linux.txt
 
   build_macos:
@@ -224,7 +224,7 @@ jobs:
 
           archives:
             - id: darwin-archives
-              formats: [binary]
+              formats: [tar.gz]
               ids:
                 - lumiwave-protocold-darwin-arm64
               wrap_in_directory: false
@@ -263,5 +263,5 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            dist/*darwin*
+            dist/*Darwin*.tar.gz
             dist/SHA256SUMS-${{ github.ref_name }}-darwin.txt
