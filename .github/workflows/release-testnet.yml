@@ -126,14 +126,8 @@ jobs:
                 - lumiwave-protocold-linux-arm64
               wrap_in_directory: false
               files: [none*]
-              name_template: >-
-                {{ .ProjectName }}_
-                {{ .Tag }}_
-                {{- title .Os }}_
-                {{- if eq .Arch "amd64" }}x86_64
-                {{- else if eq .Arch "386" }}i386
-                {{- else }}{{ .Arch }}{{ end }}
-                {{- if .Arm }}v{{ .Arm }}{{ end }}
+              name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else if eq .Arch \"386\" }}i386{{ else }}{{ .Arch }}{{ end }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
 
           checksum:
             name_template: "SHA256SUMS-{{ .Tag }}-linux.txt"
@@ -229,14 +223,8 @@ jobs:
                 - lumiwave-protocold-darwin-arm64
               wrap_in_directory: false
               files: [none*]
-              name_template: >-
-                {{ .ProjectName }}_
-                {{ .Tag }}_
-                {{- title .Os }}_
-                {{- if eq .Arch "amd64" }}x86_64
-                {{- else if eq .Arch "386" }}i386
-                {{- else }}{{ .Arch }}{{ end }}
-                {{- if .Arm }}v{{ .Arm }}{{ end }}
+              name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else if eq .Arch \"386\" }}i386{{ else }}{{ .Arch }}{{ end }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
 
           checksum:
             name_template: "SHA256SUMS-{{ .Tag }}-darwin.txt"
