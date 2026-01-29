@@ -20,16 +20,17 @@ builds:
     goos: [linux]
     goarch: [amd64]
     env:
-      - CGO_LDFLAGS=-Ldist/lib
+      # ✅ musl 툴체인 제거 (컨테이너에 없어서 실패하던 원인)
       - CC=gcc
       - CXX=g++
+      - CGO_LDFLAGS=-Ldist/lib
     hooks:
       pre:
         - mkdir -p dist/lib
         - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -o dist/lib/libwasmvm_muslc.x86_64.a
         - cp dist/lib/libwasmvm_muslc.x86_64.a dist/lib/libwasmvm.x86_64.a
     flags: [-mod=readonly, -trimpath]
-    tags: [netgo, ledger]
+    tags: [netgo, ledger, osusergo]
     ldflags:
       - -s -w
       - -linkmode=external
@@ -38,7 +39,7 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
       - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,osusergo
       - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
 
   - id: lumiwave-protocold-linux-arm64
@@ -57,7 +58,7 @@ builds:
       - CXX=aarch64-linux-gnu-g++
       - CGO_LDFLAGS=-Ldist/lib
     flags: [-mod=readonly, -trimpath]
-    tags: [netgo, ledger]
+    tags: [netgo, ledger, osusergo]
     ldflags:
       - -s -w
       - -linkmode=external
@@ -66,7 +67,7 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
       - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,osusergo
       - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
 
   - id: lumiwave-protocold-darwin-amd64
@@ -82,6 +83,7 @@ builds:
     env:
       - CC=o64-clang
       - CGO_LDFLAGS=-Ldist/lib
+      - MACOSX_DEPLOYMENT_TARGET=10.12
     flags: [-mod=readonly, -trimpath]
     tags: [netgo, ledger, static_wasm]
     ldflags:
@@ -107,6 +109,7 @@ builds:
     env:
       - CC=oa64-clang
       - CGO_LDFLAGS=-Ldist/lib
+      - MACOSX_DEPLOYMENT_TARGET=10.12
     flags: [-mod=readonly, -trimpath]
     tags: [netgo, ledger, static_wasm]
     ldflags:
