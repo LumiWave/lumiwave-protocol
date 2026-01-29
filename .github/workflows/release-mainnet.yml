@@ -27,7 +27,6 @@ jobs:
       - name: Release (single-shot via goreleaser-cross)
         run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
             -v "${PWD}:/src" \
             -w /src \
             -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
