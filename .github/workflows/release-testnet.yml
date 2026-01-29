@@ -41,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: "1.25.3"
           cache: true
 
       - name: Generate linux-only GoReleaser config
@@ -190,31 +190,6 @@ jobs:
               - go generate ./...
 
           builds:
-            - id: lumiwave-protocold-darwin-amd64
-              main: ./cmd/lumiwave-protocold/
-              binary: lumiwave-protocold
-              builder: go
-              goos: [darwin]
-              goarch: [amd64]
-              hooks:
-                pre:
-                  - mkdir -p dist/lib
-                  - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -o dist/lib/libwasmvmstatic_darwin.a
-              env:
-                - CGO_LDFLAGS=-Ldist/lib
-                - MACOSX_DEPLOYMENT_TARGET=10.12
-              flags: [-mod=readonly, -trimpath]
-              tags: [netgo, ledger, static_wasm]
-              ldflags:
-                - -s -w
-                - -linkmode=external
-                - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
-                - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
-                - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
-                - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-                - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
-                - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
-
             - id: lumiwave-protocold-darwin-arm64
               main: ./cmd/lumiwave-protocold/
               binary: lumiwave-protocold
@@ -244,7 +219,6 @@ jobs:
             - id: darwin-archives
               formats: [binary]
               ids:
-                - lumiwave-protocold-darwin-amd64
                 - lumiwave-protocold-darwin-arm64
               wrap_in_directory: false
               files: [none*]

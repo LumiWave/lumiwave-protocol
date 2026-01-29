@@ -1,6 +1,8 @@
 module github.com/LumiWave/lumiwave-protocol
 
-go 1.24.0
+go 1.25.0
+
+toolchain go1.25.3
 
 replace (
 	// fix upstream GHSA-h395-qcrw-5vmq vulnerability.
