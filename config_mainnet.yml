@@ -1,0 +1,84 @@
+version: 1
+validation: sovereign
+# 1. Set base denomination to ulwp (micro-unit, 10^-6)
+default_denom: ulwp
+# 2. Metadata configuration (Defining LWP symbol and 6-decimal precision)
+genesis:
+  app_state:
+    bank:
+      denom_metadata:
+        - description: "The native coin of LumiWave Protocol"
+          denom_units:
+            - denom: ulwp
+              exponent: 0
+              aliases: ["microlwp"]
+            - denom: LWP
+              exponent: 6
+          base: ulwp
+          display: LWP
+          name: "LumiWave Protocol Coin"
+          symbol: LWP
+    mint:
+      params:
+        mint_denom: "ulwp"
+        inflation_max: "0.344100000000000000" 
+        inflation_min: "0.000000000000000000" 
+        inflation_rate_change: "0.344100000000000000"
+        goal_bonded: "0.670000000000000000"
+        blocks_per_year: "6307200" # test : 12s, real : 6307200
+      minter:
+        inflation: "0.344100000000000000" 
+    staking:
+      params:
+        bond_denom: "ulwp" # Staking unit aligned with native denom
+    distribution:
+      params:
+        community_tax: "0.917000000000000000"
+        base_proposer_reward: "0.000000000000000000"
+        bonus_proposer_reward: "0.000000000000000000"
+        withdraw_addr_enabled: true
+    slashing:
+      params:
+        # Penalty for validator downtime (0.01%)
+        slash_fraction_downtime: "0.000100000000000000"
+        # Minimum duration a validator remains jailed after downtime (10 minutes)
+        downtime_jail_duration: "600s"
+        # Number of blocks for the sliding window to track downtime
+        signed_blocks_window: "100"
+        min_signed_per_window: "0.500000000000000000"
+accounts:
+  - name: pdx-testnet-dummy
+    coins: ["900000000000ulwp"]
+client:
+  openapi:
+    path: docs/static/openapi.json
+validators:
+- name: pdx-testnet-dummy
+  bonded: "500000000000ulwp"
+  app:
+    minimum-gas-prices: "0.025ulwp"
+    pruning: "custom"
+    pruning-keep-recent: "100000"
+    pruning-interval: "100"
+    pruning-keep-every: "432000"
+    state-sync:
+      snapshot-interval: "2000"
+    api:
+      enable: true
+      swagger: true
+    telemetry:
+      enabled: true
+      prometheus-retention-time: "60"
+  config:
+    moniker: "pdx-validator"
+    tx_index:
+      indexer: "kv"
+    instrumentation:
+      prometheus: true
+    consensus:
+      # Key parameters determining block generation intervals
+      timeout_propose: "3s"
+      timeout_prevote: "1s"
+      timeout_precommit: "1s"
+      timeout_commit: "5s"  # Actual block time is roughly 5-6s
+
