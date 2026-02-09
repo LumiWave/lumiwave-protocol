@@ -12,6 +12,7 @@ import (
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -197,6 +198,10 @@ func New(
 		panic(err)
 	}
 
+	// edit wasm module params to allow larger contracts
+	wasmtypes.MaxWasmSize = 2 * 1024 * 1024
+	wasmtypes.MaxProposalWasmSize = 4 * 1024 * 1024
+
 	/****  Module Options ****/
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
@@ -231,33 +236,35 @@ func New(
 }
 
 func (app *App) setupUpgradeHandlers() {
+	upgradeNames := []string{
+		"v1-upgrade-lumiwaveprotocol",
+		"v0.0.9",
+	}
 
-	// v1 handler (keep)
-	// app.UpgradeKeeper.SetUpgradeHandler("v1-upgrade-lumiwaveprotocol", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-	// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// 	// Check app.ModuleManager and app.Configurator fields
-	// 	// If field names differ, verify your App struct definition
-	// 	return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
-	// })
-
-	// v1 handler addition
-	upgradeName := "v1-upgrade-lumiwaveprotocol"
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		upgradeName,
-		func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			sdkCtx := sdk.UnwrapSDKContext(ctx)
-			return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
-		},
-	)
+	for _, upgradeName := range upgradeNames {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgradeName,
+			func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
+			},
+		)
+	}
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
 
-	if upgradeInfo.Name == upgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	isKnownUpgrade := false
+	for _, upgradeName := range upgradeNames {
+		if upgradeInfo.Name == upgradeName {
+			isKnownUpgrade = true
+			break
+		}
+	}
+
+	if isKnownUpgrade && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// Use storetypes package
 		storeUpgrades := storetypes.StoreUpgrades{}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
