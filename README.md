@@ -156,6 +156,11 @@ Below is an example of publicly exposed endpoints for a running testnet:
 - gRPC-web: `https://grpc-web.testnet.example.io:443`
 - Explorer: `https://explorer.testnet.example.io/ping-pub`
 
+#### LumiWave Testnet Links
+
+- Dashboard: [https://lwp-testnet-dashboard.lumiwavelab.com](https://lwp-testnet-dashboard.lumiwavelab.com)
+- Explorer: [https://lwp-testnet-explorer.lumiwavelab.com](https://lwp-testnet-explorer.lumiwavelab.com)
+
 #### Description
 
 - **RPC**  
@@ -172,6 +177,12 @@ Below is an example of publicly exposed endpoints for a running testnet:
 
 - **Explorer**  
   Block explorer endpoint powered by Ping.Pub.
+
+### Go Client Sample
+
+Go client usage/documentation has been moved to:
+
+    [examples/go-client/README.md](examples/go-client/README.md)
 
 ### Peers
 

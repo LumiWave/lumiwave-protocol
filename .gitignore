@@ -9,3 +9,4 @@ release/
 *.ign
 dist
 .goreleaser.yaml
+examples/go-client/bin/

@@ -1,6 +1,10 @@
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 COMMIT := $(shell git log -1 --format='%H')
 APPNAME := lumiwaveprotocol
+GO_CLIENT_SRC := ./examples/go-client
+GO_CLIENT_BIN_DIR := examples/go-client/bin
+GO_CLIENT_BIN := $(GO_CLIENT_BIN_DIR)/go-client
+GO_CLIENT_BUILD_CACHE := .cache/go-build
 
 COVER_FILE := .coverage.out
 COVER_HTML_FILE := .coverage.html
@@ -76,7 +80,7 @@ proto-gen:
 	@echo "Generating protobuf files..."
 	@ignite generate proto-go --yes
 
-.PHONY: proto-gen
+.PHONY: proto-deps proto-gen
 
 #################
 ###  Linting  ###
@@ -106,3 +110,18 @@ govulncheck:
 	@govulncheck ./...
 
 .PHONY: govet govulncheck
+
+#########################
+### Example Go Client ###
+#########################
+
+build-go-client:
+	@echo "--> building examples/go-client"
+	@mkdir -p $(GO_CLIENT_BIN_DIR)
+	@set -e; \
+	mkdir -p $(GO_CLIENT_BUILD_CACHE); \
+	trap 'rm -rf .cache' EXIT; \
+	GOCACHE=$(abspath $(GO_CLIENT_BUILD_CACHE)) go build -mod=readonly -o $(GO_CLIENT_BIN) $(GO_CLIENT_SRC)
+	@echo "--> build complete: binary created at $(GO_CLIENT_BIN)"
+
+.PHONY: build-go-client
