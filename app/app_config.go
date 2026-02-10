@@ -119,6 +119,9 @@ var (
 					// CanWithdrawInvariant invariant.
 					// NOTE: staking module is required if HistoricalEntries param > 0
 					BeginBlockers: []string{
+						// Run custom inflation controller before mint so yearly transitions
+						// are applied in the same block mint executes.
+						lumiwaveprotocolmoduletypes.ModuleName,
 						minttypes.ModuleName,
 						distrtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -129,7 +132,6 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-						lumiwaveprotocolmoduletypes.ModuleName,
 						wasmtypes.ModuleName,
 						// this line is used by starport scaffolding # stargate/app/beginBlockers
 					},

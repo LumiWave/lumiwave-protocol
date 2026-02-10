@@ -38,6 +38,43 @@ var InflationSchedule = map[int]string{
 	6: "0.0441",
 }
 
+func calculateYearFromHeight(currentHeight, blocksPerYear int64) int {
+	if currentHeight <= 0 || blocksPerYear <= 0 {
+		return 1
+	}
+
+	return int((currentHeight-1)/blocksPerYear) + 1
+}
+
+func inflationMaxForYear(year int) math.LegacyDec {
+	if maxRateStr, ok := InflationSchedule[year]; ok {
+		return math.LegacyMustNewDecFromStr(maxRateStr)
+	}
+
+	if year > 6 {
+		baseRate := math.LegacyMustNewDecFromStr(InflationSchedule[6])
+		halfLifeCycles := (year - 5) / 2
+
+		denominator := int64(1)
+		for i := 0; i < halfLifeCycles; i++ {
+			denominator *= 2
+		}
+
+		return baseRate.Quo(math.LegacyNewDec(denominator))
+	}
+
+	return math.LegacyZeroDec()
+}
+
+func calculateYearAndTargetInflation(currentHeight int64, blocksPerYear uint64) (int, math.LegacyDec, error) {
+	if blocksPerYear == 0 {
+		return 0, math.LegacyZeroDec(), fmt.Errorf("blocks_per_year is zero")
+	}
+
+	year := calculateYearFromHeight(currentHeight, int64(blocksPerYear))
+	return year, inflationMaxForYear(year), nil
+}
+
 // AppModule implements the AppModule interface that defines the inter-dependent methods that modules need to implement
 type AppModule struct {
 	cdc        codec.Codec
@@ -147,45 +184,17 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // The begin block implementation is optional.
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// 1. Calculate the current year based on block height (Assuming 5s block time)
-	// For testing: Use 12, For production: Use 6307200
-	const BlocksPerYear = 6307200
 	currentHeight := sdkCtx.BlockHeight()
-
-	// Year calculation: (currentHeight - 1) / BlocksPerYear + 1
-	// e.g., Blocks 1-12 correspond to Year 1 when BlocksPerYear is 12
-	year := int((currentHeight-1)/int64(BlocksPerYear)) + 1
-
-	var targetMax math.LegacyDec
-
-	// 2. Determine the Inflation Max rate for the current year
-	if maxRateStr, ok := InflationSchedule[year]; ok {
-		// Years 1-6: Use the predefined rates from the schedule table
-		targetMax = math.LegacyMustNewDecFromStr(maxRateStr)
-	} else if year > 6 {
-		// Post-Year 6: Apply halving logic based on the Year 6 rate (0.0441)
-		baseRate := math.LegacyMustNewDecFromStr(InflationSchedule[6])
-
-		// Half-life cycle occurs every 2 years (e.g., 1 cycle for Years 7-8, 2 for Years 9-10)
-		halfLifeCycles := (year - 5) / 2
-
-		// Calculate 2^n for the denominator to determine the halved rate (1 / 2^n)
-		denominator := int64(1)
-		for i := 0; i < halfLifeCycles; i++ {
-			denominator *= 2
-		}
-
-		// Apply halving: targetMax = baseRate / 2^n
-		targetMax = baseRate.Quo(math.LegacyNewDec(denominator))
-	} else {
-		// Fallback for unexpected year values
-		targetMax = math.LegacyZeroDec()
-	}
 
 	params, err := am.mintKeeper.Params.Get(sdkCtx)
 	if err != nil {
-		return nil
+		return fmt.Errorf("failed to get mint params (height=%d): %w", currentHeight, err)
+	}
+
+	// 1. Calculate the current year from the active mint params.
+	year, targetMax, err := calculateYearAndTargetInflation(currentHeight, params.BlocksPerYear)
+	if err != nil {
+		return fmt.Errorf("invalid mint params: %w (height=%d)", err, currentHeight)
 	}
 
 	// 3. Update the Inflation Max parameter and enforce the cap (Clipping logic)
@@ -194,13 +203,20 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 		params.InflationMin = math.LegacyZeroDec()
 
 		// Persist the updated parameters to the store
-		am.mintKeeper.Params.Set(sdkCtx, params)
+		if err := am.mintKeeper.Params.Set(sdkCtx, params); err != nil {
+			return fmt.Errorf("failed to set mint params (height=%d, year=%d, target_max=%s): %w", currentHeight, year, targetMax.String(), err)
+		}
 
 		// Reset the current inflation rate if it exceeds the new target maximum
-		minter, _ := am.mintKeeper.Minter.Get(sdkCtx)
+		minter, err := am.mintKeeper.Minter.Get(sdkCtx)
+		if err != nil {
+			return fmt.Errorf("failed to get mint minter (height=%d, year=%d): %w", currentHeight, year, err)
+		}
 		if minter.Inflation.GT(targetMax) {
 			minter.Inflation = targetMax
-			am.mintKeeper.Minter.Set(sdkCtx, minter)
+			if err := am.mintKeeper.Minter.Set(sdkCtx, minter); err != nil {
+				return fmt.Errorf("failed to set mint minter (height=%d, year=%d, target_max=%s): %w", currentHeight, year, targetMax.String(), err)
+			}
 		}
 
 		// Log the transition for auditing and monitoring

@@ -1,5 +1,7 @@
 version: 1
 validation: sovereign
+build:
+  main: cmd/lumiwave-protocold
 # 1. Set base denomination to ulwp (micro-unit, 10^-6)
 default_denom: ulwp
 # 2. Metadata configuration (Defining LWP symbol and 6-decimal precision)
@@ -81,4 +83,3 @@ validators:
       timeout_prevote: "1s"
       timeout_precommit: "1s"
       timeout_commit: "5s"  # Actual block time is roughly 5-6s
-
