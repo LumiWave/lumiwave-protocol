@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+project_name: lumiwave-protocold
+
+env:
+  - CGO_ENABLED=1
+  - COSMWASM_VERSION=v2.2.4
+  - TM_VERSION=v0.38.11
+
+builds:
+  - id: lumiwave-protocold-darwin-arm64
+    main: ./cmd/lumiwave-protocold/
+    binary: lumiwave-protocold
+    builder: go
+    goos: [darwin]
+    goarch: [arm64]
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -o dist/lib/libwasmvmstatic_darwin.a
+        - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/checksums.txt -o dist/lib/checksums.txt
+        - (cd dist/lib && grep '  libwasmvmstatic_darwin.a$' checksums.txt | shasum -a 256 -c -)
+    env:
+      - CGO_LDFLAGS=-Ldist/lib
+      - MACOSX_DEPLOYMENT_TARGET=10.12
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger, static_wasm]
+    ldflags:
+      - -s -w
+      - -linkmode=external
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+
+archives:
+  - id: darwin-archives
+    formats: [tar.gz]
+    ids:
+      - lumiwave-protocold-darwin-arm64
+    wrap_in_directory: false
+    files: [none*]
+    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else if eq .Arch \"386\" }}i386{{ else }}{{ .Arch }}{{ end }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+checksum:
+  name_template: "SHA256SUMS-{{ .Tag }}-darwin.txt"
+  algorithm: sha256
+
+changelog:
+  disable: true
+
+release:
+  disable: true

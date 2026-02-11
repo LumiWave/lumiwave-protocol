@@ -10,22 +10,10 @@ permissions:
   contents: write
 
 jobs:
-  create_release:
-    name: Create GitHub Release
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Create release (empty)
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          prerelease: true
-          draft: false
-
   build_linux:
-    name: Build + Upload (Linux)
+    name: Build (Linux)
+    if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref_name, '-testnet')
     runs-on: ubuntu-22.04
-    needs: create_release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,123 +32,27 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Generate linux-only GoReleaser config
-        run: |
-          cat > .goreleaser.linux.ci.yaml <<'YAML'
-          # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-          version: 2
-          project_name: lumiwave-protocold
-
-          env:
-            - CGO_ENABLED=1
-            - COSMWASM_VERSION=v2.2.4
-            - TM_VERSION=v0.38.11
-
-          before:
-            hooks:
-              - go mod tidy
-              - go generate ./...
-
-          builds:
-            - id: lumiwave-protocold-linux-amd64
-              main: ./cmd/lumiwave-protocold/
-              binary: lumiwave-protocold
-              builder: go
-              goos: [linux]
-              goarch: [amd64]
-              env:
-                - CC=gcc
-                - CXX=g++
-                - CGO_LDFLAGS=-Ldist/lib
-              hooks:
-                pre:
-                  - mkdir -p dist/lib
-                  - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -o dist/lib/libwasmvm_muslc.x86_64.a
-                  - cp dist/lib/libwasmvm_muslc.x86_64.a dist/lib/libwasmvm.x86_64.a
-              flags: [-mod=readonly, -trimpath]
-              tags: [netgo, ledger, osusergo]
-              ldflags:
-                - -s -w
-                - -linkmode=external
-                - -extldflags "-Ldist/lib -lwasmvm_muslc.x86_64 -lm -Wl,-z,muldefs -static -z noexecstack"
-                - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
-                - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
-                - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
-                - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-                - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,osusergo
-                - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
-
-            - id: lumiwave-protocold-linux-arm64
-              main: ./cmd/lumiwave-protocold/
-              binary: lumiwave-protocold
-              builder: go
-              goos: [linux]
-              goarch: [arm64]
-              env:
-                - CC=aarch64-linux-gnu-gcc
-                - CXX=aarch64-linux-gnu-g++
-                - CGO_LDFLAGS=-Ldist/lib
-              hooks:
-                pre:
-                  - mkdir -p dist/lib
-                  - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -o dist/lib/libwasmvm_muslc.aarch64.a
-                  - cp dist/lib/libwasmvm_muslc.aarch64.a dist/lib/libwasmvm.aarch64.a
-              flags: [-mod=readonly, -trimpath]
-              tags: [netgo, ledger, osusergo]
-              ldflags:
-                - -s -w
-                - -linkmode=external
-                - -extldflags "-Ldist/lib -lwasmvm_muslc.aarch64 -lm -Wl,-z,muldefs -static -z noexecstack"
-                - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
-                - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
-                - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
-                - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-                - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,osusergo
-                - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
-
-          archives:
-            - id: linux-archives
-              formats: [tar.gz]
-              ids:
-                - lumiwave-protocold-linux-amd64
-                - lumiwave-protocold-linux-arm64
-              wrap_in_directory: false
-              files: [none*]
-              name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else if eq .Arch \"386\" }}i386{{ else }}{{ .Arch }}{{ end }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-
-
-          checksum:
-            name_template: "SHA256SUMS-{{ .Tag }}-linux.txt"
-            algorithm: sha256
-
-          changelog:
-            disable: true
-
-          release:
-            disable: true
-          YAML
-
       - name: Build (linux only)
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: release --snapshot --clean --config .goreleaser.linux.ci.yaml
+          version: v2.13.3
+          args: release --snapshot --clean --config .github/goreleaser/goreleaser.linux.ci.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifacts to GitHub Release (linux)
-        uses: softprops/action-gh-release@v2
+      - name: Upload build artifacts (linux)
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ github.ref_name }}
-          files: |
+          name: release-linux
+          path: |
             dist/*Linux*.tar.gz
             dist/SHA256SUMS-${{ github.ref_name }}-linux.txt
 
   build_macos:
-    name: Build + Upload (macOS)
+    name: Build (macOS)
+    if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref_name, '-testnet')
     runs-on: macos-14
-    needs: create_release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -173,83 +65,52 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Generate darwin-only GoReleaser config
-        run: |
-          cat > .goreleaser.darwin.ci.yaml <<'YAML'
-          # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-          version: 2
-          project_name: lumiwave-protocold
-
-          env:
-            - CGO_ENABLED=1
-            - COSMWASM_VERSION=v2.2.4
-            - TM_VERSION=v0.38.11
-
-          before:
-            hooks:
-              - go mod tidy
-              - go generate ./...
-
-          builds:
-            - id: lumiwave-protocold-darwin-arm64
-              main: ./cmd/lumiwave-protocold/
-              binary: lumiwave-protocold
-              builder: go
-              goos: [darwin]
-              goarch: [arm64]
-              hooks:
-                pre:
-                  - mkdir -p dist/lib
-                  - curl -L https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -o dist/lib/libwasmvmstatic_darwin.a
-              env:
-                - CGO_LDFLAGS=-Ldist/lib
-                - MACOSX_DEPLOYMENT_TARGET=10.12
-              flags: [-mod=readonly, -trimpath]
-              tags: [netgo, ledger, static_wasm]
-              ldflags:
-                - -s -w
-                - -linkmode=external
-                - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
-                - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
-                - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
-                - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-                - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
-                - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
-
-          archives:
-            - id: darwin-archives
-              formats: [tar.gz]
-              ids:
-                - lumiwave-protocold-darwin-arm64
-              wrap_in_directory: false
-              files: [none*]
-              name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else if eq .Arch \"386\" }}i386{{ else }}{{ .Arch }}{{ end }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-
-
-          checksum:
-            name_template: "SHA256SUMS-{{ .Tag }}-darwin.txt"
-            algorithm: sha256
-
-          changelog:
-            disable: true
-
-          release:
-            disable: true
-          YAML
-
       - name: Build (darwin only)
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: release --snapshot --clean --config .goreleaser.darwin.ci.yaml
+          version: v2.13.3
+          args: release --snapshot --clean --config .github/goreleaser/goreleaser.darwin.ci.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifacts to GitHub Release (darwin)
+      - name: Upload build artifacts (darwin)
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-darwin
+          path: |
+            dist/*Darwin*.tar.gz
+            dist/SHA256SUMS-${{ github.ref_name }}-darwin.txt
+
+  create_release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref_name, '-testnet')
+    runs-on: ubuntu-22.04
+    needs:
+      - build_linux
+      - build_macos
+    steps:
+      - name: Download linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux
+          path: release-artifacts/linux
+
+      - name: Download darwin artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-darwin
+          path: release-artifacts/darwin
+
+      - name: Create release with artifacts
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: true
+          draft: false
           files: |
-            dist/*Darwin*.tar.gz
-            dist/SHA256SUMS-${{ github.ref_name }}-darwin.txt
+            release-artifacts/linux/*.tar.gz
+            release-artifacts/linux/SHA256SUMS-${{ github.ref_name }}-linux.txt
+            release-artifacts/darwin/*.tar.gz
+            release-artifacts/darwin/SHA256SUMS-${{ github.ref_name }}-darwin.txt

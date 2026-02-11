@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+project_name: lumiwave-protocold
+
+env:
+  - CGO_ENABLED=1
+  - COSMWASM_VERSION=v2.2.4
+  - TM_VERSION=v0.38.11
+
+builds:
+  - id: lumiwave-protocold-linux-amd64
+    main: ./cmd/lumiwave-protocold/
+    binary: lumiwave-protocold
+    builder: go
+    goos: [linux]
+    goarch: [amd64]
+    env:
+      - CC=gcc
+      - CXX=g++
+      - CGO_LDFLAGS=-Ldist/lib
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -o dist/lib/libwasmvm_muslc.x86_64.a
+        - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/checksums.txt -o dist/lib/checksums.txt
+        - (cd dist/lib && grep '  libwasmvm_muslc.x86_64.a$' checksums.txt | sha256sum -c -)
+        - cp dist/lib/libwasmvm_muslc.x86_64.a dist/lib/libwasmvm.x86_64.a
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger, osusergo]
+    ldflags:
+      - -s -w
+      - -linkmode=external
+      - -extldflags "-Ldist/lib -lwasmvm_muslc.x86_64 -lm -Wl,-z,muldefs -static -z noexecstack"
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,osusergo
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+
+  - id: lumiwave-protocold-linux-arm64
+    main: ./cmd/lumiwave-protocold/
+    binary: lumiwave-protocold
+    builder: go
+    goos: [linux]
+    goarch: [arm64]
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+      - CGO_LDFLAGS=-Ldist/lib
+    hooks:
+      pre:
+        - mkdir -p dist/lib
+        - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -o dist/lib/libwasmvm_muslc.aarch64.a
+        - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/checksums.txt -o dist/lib/checksums.txt
+        - (cd dist/lib && grep '  libwasmvm_muslc.aarch64.a$' checksums.txt | sha256sum -c -)
+        - cp dist/lib/libwasmvm_muslc.aarch64.a dist/lib/libwasmvm.aarch64.a
+    flags: [-mod=readonly, -trimpath]
+    tags: [netgo, ledger, osusergo]
+    ldflags:
+      - -s -w
+      - -linkmode=external
+      - -extldflags "-Ldist/lib -lwasmvm_muslc.aarch64 -lm -Wl,-z,muldefs -static -z noexecstack"
+      - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
+      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,osusergo
+      - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+
+archives:
+  - id: linux-archives
+    formats: [tar.gz]
+    ids:
+      - lumiwave-protocold-linux-amd64
+      - lumiwave-protocold-linux-arm64
+    wrap_in_directory: false
+    files: [none*]
+    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else if eq .Arch \"386\" }}i386{{ else }}{{ .Arch }}{{ end }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+checksum:
+  name_template: "SHA256SUMS-{{ .Tag }}-linux.txt"
+  algorithm: sha256
+
+changelog:
+  disable: true
+
+release:
+  disable: true
