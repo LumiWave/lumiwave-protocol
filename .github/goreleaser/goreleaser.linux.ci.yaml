@@ -23,7 +23,7 @@ builds:
         - mkdir -p dist/lib
         - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -o dist/lib/libwasmvm_muslc.x86_64.a
         - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/checksums.txt -o dist/lib/checksums.txt
-        - (cd dist/lib && grep '  libwasmvm_muslc.x86_64.a$' checksums.txt | sha256sum -c -)
+        - grep "  libwasmvm_muslc.x86_64.a$" dist/lib/checksums.txt | sha256sum -c -
         - cp dist/lib/libwasmvm_muslc.x86_64.a dist/lib/libwasmvm.x86_64.a
     flags: [-mod=readonly, -trimpath]
     tags: [netgo, ledger, osusergo]
@@ -53,7 +53,7 @@ builds:
         - mkdir -p dist/lib
         - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -o dist/lib/libwasmvm_muslc.aarch64.a
         - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/checksums.txt -o dist/lib/checksums.txt
-        - (cd dist/lib && grep '  libwasmvm_muslc.aarch64.a$' checksums.txt | sha256sum -c -)
+        - grep "  libwasmvm_muslc.aarch64.a$" dist/lib/checksums.txt | sha256sum -c -
         - cp dist/lib/libwasmvm_muslc.aarch64.a dist/lib/libwasmvm.aarch64.a
     flags: [-mod=readonly, -trimpath]
     tags: [netgo, ledger, osusergo]

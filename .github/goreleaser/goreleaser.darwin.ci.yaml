@@ -19,7 +19,7 @@ builds:
         - mkdir -p dist/lib
         - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -o dist/lib/libwasmvmstatic_darwin.a
         - curl -fL --retry 3 --proto '=https' --tlsv1.2 https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/checksums.txt -o dist/lib/checksums.txt
-        - (cd dist/lib && grep '  libwasmvmstatic_darwin.a$' checksums.txt | shasum -a 256 -c -)
+        - grep "  libwasmvmstatic_darwin.a$" dist/lib/checksums.txt | shasum -a 256 -c -
     env:
       - CGO_LDFLAGS=-Ldist/lib
       - MACOSX_DEPLOYMENT_TARGET=10.12
