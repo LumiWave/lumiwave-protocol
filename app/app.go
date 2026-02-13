@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"io"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -50,9 +49,10 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/LumiWave/lumiwave-protocol/app/upgrades"
 	"github.com/LumiWave/lumiwave-protocol/docs"
 	lumiwaveprotocolmodulekeeper "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/keeper"
+	tokenfactorykeeper "github.com/LumiWave/lumiwave-protocol/x/tokenfactory/keeper"
 )
 
 const (
@@ -103,6 +103,7 @@ type App struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
+	TokenFactoryKeeper  tokenfactorykeeper.Keeper
 
 	// simulation manager
 	sm                     *module.SimulationManager
@@ -236,38 +237,17 @@ func New(
 }
 
 func (app *App) setupUpgradeHandlers() {
-	upgradeNames := []string{
-		"v1-upgrade-lumiwaveprotocol",
-		"v0.0.9",
-	}
-
-	for _, upgradeName := range upgradeNames {
-		app.UpgradeKeeper.SetUpgradeHandler(
-			upgradeName,
-			func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				return app.ModuleManager.RunMigrations(sdkCtx, app.Configurator(), fromVM)
-			},
-		)
-	}
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
+	if err := upgrades.Setup(upgrades.Dependencies{
+		UpgradeKeeper:      app.UpgradeKeeper,
+		ModuleManager:      app.ModuleManager,
+		Configurator:       app.Configurator(),
+		TokenFactoryKeeper: app.TokenFactoryKeeper,
+		GetSubspace: func(moduleName string) upgrades.ParamSubspace {
+			return app.GetSubspace(moduleName)
+		},
+		SetStoreLoader: app.SetStoreLoader,
+	}); err != nil {
 		panic(err)
-	}
-
-	isKnownUpgrade := false
-	for _, upgradeName := range upgradeNames {
-		if upgradeInfo.Name == upgradeName {
-			isKnownUpgrade = true
-			break
-		}
-	}
-
-	if isKnownUpgrade && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		// Use storetypes package
-		storeUpgrades := storetypes.StoreUpgrades{}
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }
 

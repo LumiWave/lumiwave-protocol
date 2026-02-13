@@ -39,6 +39,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	_ "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/module"
 	lumiwaveprotocolmoduletypes "github.com/LumiWave/lumiwave-protocol/x/lumiwaveprotocol/types"
+	tokenfactorytypes "github.com/LumiWave/lumiwave-protocol/x/tokenfactory/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -84,6 +85,7 @@ var (
 		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: icatypes.ModuleName},
+		{Account: tokenfactorytypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: wasmtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: lumiwaveprotocolmoduletypes.ModuleName, Permissions: []string{authtypes.Minter}},
 	}
@@ -96,6 +98,7 @@ var (
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
 		nft.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
 		lumiwaveprotocolmoduletypes.ModuleName,
@@ -174,6 +177,7 @@ var (
 						upgradetypes.ModuleName,
 						circuittypes.ModuleName,
 						epochstypes.ModuleName,
+						tokenfactorytypes.ModuleName,
 						// ibc modules
 						ibcexported.ModuleName,
 						ibctransfertypes.ModuleName,

@@ -5,6 +5,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	tokenfactorymodule "github.com/LumiWave/lumiwave-protocol/x/tokenfactory"
+	tokenfactorykeeper "github.com/LumiWave/lumiwave-protocol/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/LumiWave/lumiwave-protocol/x/tokenfactory/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -42,6 +45,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		storetypes.NewKVStoreKey(ibctransfertypes.StoreKey),
 		storetypes.NewKVStoreKey(icahosttypes.StoreKey),
 		storetypes.NewKVStoreKey(icacontrollertypes.StoreKey),
+		storetypes.NewKVStoreKey(tokenfactorytypes.StoreKey),
 	); err != nil {
 		return err
 	}
@@ -53,6 +57,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	app.ParamsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	app.ParamsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	app.ParamsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
+	app.ParamsKeeper.Subspace(tokenfactorytypes.ModuleName).WithKeyTable(tokenfactorytypes.ParamKeyTable())
 
 	govModuleAddr, _ := app.AuthKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
 
@@ -101,6 +106,16 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		govModuleAddr,
 	)
 
+	app.TokenFactoryKeeper = tokenfactorykeeper.NewKeeper(
+		app.GetKey(tokenfactorytypes.StoreKey),
+		app.GetSubspace(tokenfactorytypes.ModuleName),
+		GetMaccPerms(),
+		app.AuthKeeper,
+		app.BankKeeper,
+		app.DistrKeeper,
+	)
+	app.TokenFactoryKeeper.SetContractKeeper(app.WasmKeeper)
+
 	// create IBC module from bottom to top of stack
 	var (
 		transferStack      porttypes.IBCModule = ibctransfer.NewIBCModule(app.TransferKeeper)
@@ -144,6 +159,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		ibc.NewAppModule(app.IBCKeeper),
 		ibctransfer.NewAppModule(app.TransferKeeper),
 		icamodule.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
+		tokenfactorymodule.NewAppModule(app.TokenFactoryKeeper, app.AuthKeeper, app.BankKeeper),
 		ibctm.NewAppModule(tmLightClientModule),
 		solomachine.NewAppModule(soloLightClientModule),
 	); err != nil {
@@ -158,12 +174,13 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 // This needs to be removed after IBC supports App Wiring.
 func RegisterIBC(cdc codec.Codec) map[string]appmodule.AppModule {
 	modules := map[string]appmodule.AppModule{
-		ibcexported.ModuleName:      ibc.AppModule{},
-		ibctransfertypes.ModuleName: ibctransfer.AppModule{},
-		icatypes.ModuleName:         icamodule.AppModule{},
-		ibctm.ModuleName:            ibctm.AppModule{},
-		solomachine.ModuleName:      solomachine.AppModule{},
-		wasmtypes.ModuleName:        wasm.AppModule{},
+		ibcexported.ModuleName:       ibc.AppModule{},
+		ibctransfertypes.ModuleName:  ibctransfer.AppModule{},
+		icatypes.ModuleName:          icamodule.AppModule{},
+		tokenfactorytypes.ModuleName: tokenfactorymodule.AppModule{},
+		ibctm.ModuleName:             ibctm.AppModule{},
+		solomachine.ModuleName:       solomachine.AppModule{},
+		wasmtypes.ModuleName:         wasm.AppModule{},
 	}
 
 	for _, m := range modules {
