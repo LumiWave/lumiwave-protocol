@@ -10,3 +10,4 @@ release/
 dist
 .goreleaser.yaml
 examples/go-client/bin/
+proposal.json

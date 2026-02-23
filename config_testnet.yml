@@ -39,6 +39,15 @@ genesis:
         base_proposer_reward: "0.000000000000000000"
         bonus_proposer_reward: "0.000000000000000000"
         withdraw_addr_enabled: true
+    slashing:
+      params:
+        # Penalty for validator downtime (0.01%)
+        slash_fraction_downtime: "0.000100000000000000"
+        # Minimum duration a validator remains jailed after downtime (10 minutes)
+        downtime_jail_duration: "600s"
+        # Number of blocks for the sliding window to track downtime
+        signed_blocks_window: "100"
+        min_signed_per_window: "0.500000000000000000"
 accounts:
   - name: pdx-testnet-dummy
     coins: ["900000000000ulwp"]
@@ -48,6 +57,8 @@ client:
 validators:
 - name: pdx-testnet-dummy
   bonded: "500000000000ulwp"
+  client:
+    keyring-backend: "file"
   app:
     minimum-gas-prices: "0.025ulwp"
     pruning: "custom"

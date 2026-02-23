@@ -49,14 +49,16 @@ genesis:
         signed_blocks_window: "100"
         min_signed_per_window: "0.500000000000000000"
 accounts:
-  - name: pdx-testnet-dummy
-    coins: ["900000000000ulwp"]
+  - name: pdx-mainnet-1
+    coins: ["770075466000000ulwp"]
 client:
   openapi:
     path: docs/static/openapi.json
 validators:
-- name: pdx-testnet-dummy
+- name: pdx-mainnet-1
   bonded: "500000000000ulwp"
+  client:
+    keyring-backend: "file"
   app:
     minimum-gas-prices: "0.025ulwp"
     pruning: "custom"
