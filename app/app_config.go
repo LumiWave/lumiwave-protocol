@@ -262,8 +262,10 @@ var (
 				Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 			},
 			{
-				Name:   govtypes.ModuleName,
-				Config: appconfig.WrapAny(&govmodulev1.Module{}),
+				Name: govtypes.ModuleName,
+				Config: appconfig.WrapAny(&govmodulev1.Module{
+					MaxMetadataLen: 2048,
+				}),
 			},
 			{
 				Name:   consensustypes.ModuleName,
