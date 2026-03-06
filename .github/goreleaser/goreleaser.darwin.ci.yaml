@@ -30,7 +30,7 @@ builds:
       - -linkmode=external
       - -X github.com/cosmos/cosmos-sdk/version.Name=lumiwave-protocol
       - -X github.com/cosmos/cosmos-sdk/version.AppName=lumiwave-protocold
-      - -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Env.RELEASE_TAG }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
       - -X github.com/cometbft/cometbft/version.TMCoreSemVer={{ .Env.TM_VERSION }}
