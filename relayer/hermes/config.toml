@@ -1,0 +1,121 @@
+# ============================================
+# Hermes IBC Relayer - LumiWave Testnet Config
+# ============================================
+# LumiWave (lumiwaveprotocol) <-> Osmosis Testnet (osmo-test-5)
+#
+# Hermes version: v1.13.3+
+# Config file location: ~/.hermes/config.toml
+
+[global]
+log_level = 'info'
+
+[mode]
+
+[mode.clients]
+enabled = true
+refresh = true            # Auto-refresh light clients
+misbehaviour = true       # Detect Byzantine behavior
+
+[mode.connections]
+enabled = false           # Set true only during initial connection creation, then false
+
+[mode.channels]
+enabled = false           # Set true only during initial channel creation, then false
+
+[mode.packets]
+enabled = true            # Packet relay (core feature)
+clear_interval = 100      # Clear pending packets every 100 blocks
+clear_on_start = true     # Clear backlogged packets on startup
+tx_confirmation = false
+auto_register_counterparty_payee = false
+ics20_max_memo_size = { enabled = true, size = 32768 }
+ics20_max_receiver_size = { enabled = true, size = 2048 }
+
+[rest]
+enabled = true
+host = '127.0.0.1'
+port = 3000
+
+[telemetry]
+enabled = true
+host = '127.0.0.1'
+port = 3001
+
+# ============================================
+# Chain 1: LumiWave Testnet
+# ============================================
+[[chains]]
+id = 'lumiwaveprotocol'
+type = 'CosmosSdk'
+
+# --- Endpoints ---
+# If running a testnet node locally:
+rpc_addr = 'http://127.0.0.1:26657'
+grpc_addr = 'http://127.0.0.1:9090'
+# If running on an external server, uncomment and modify below:
+# rpc_addr = 'http://<LUMIWAVE_TESTNET_RPC>:26657'
+# grpc_addr = 'http://<LUMIWAVE_TESTNET_GRPC>:9090'
+
+event_source = { mode = 'push', url = 'ws://127.0.0.1:26657/websocket', batch_delay = '500ms' }
+
+rpc_timeout = '10s'
+trusted_node = false
+account_prefix = 'lumi'
+key_name = 'lumiwave-relayer'
+key_store_type = 'Test'
+store_prefix = 'ibc'
+default_gas = 100000
+max_gas = 1000000
+gas_price = { price = 0.025, denom = 'ulwp' }
+gas_multiplier = 1.2
+max_msg_num = 30
+max_tx_size = 180000
+max_grpc_decoding_size = 33554432
+clock_drift = '5s'
+max_block_time = '30s'
+# unbonding_time = 1814400s (21 days) → trusting_period = 14 days
+trusting_period = '14days'
+memo_prefix = 'LumiWave Relayer'
+address_type = { derivation = 'cosmos' }
+ccv_consumer_chain = false
+
+[chains.packet_filter]
+policy = 'allow'
+list = [['transfer', '*']]
+
+# ============================================
+# Chain 2: Osmosis Testnet (osmo-test-5)
+# ============================================
+[[chains]]
+id = 'osmo-test-5'
+type = 'CosmosSdk'
+
+# --- Endpoints ---
+rpc_addr = 'https://rpc.osmotest5.osmosis.zone'
+grpc_addr = 'https://grpc.osmotest5.osmosis.zone'
+event_source = { mode = 'push', url = 'wss://rpc.osmotest5.osmosis.zone/websocket', batch_delay = '500ms' }
+
+rpc_timeout = '10s'
+trusted_node = false
+account_prefix = 'osmo'
+key_name = 'osmosis-relayer'
+key_store_type = 'Test'
+store_prefix = 'ibc'
+default_gas = 300000
+max_gas = 3000000
+gas_price = { price = 0.1, denom = 'uosmo' }
+gas_multiplier = 1.5
+max_msg_num = 30
+max_tx_size = 180000
+max_grpc_decoding_size = 33554432
+clock_drift = '5s'
+max_block_time = '30s'
+# unbonding = 5 days (testnet) → trusting_period = 3 days (2/3)
+trusting_period = '3days'
+memo_prefix = 'LumiWave Relayer'
+address_type = { derivation = 'cosmos' }
+ccv_consumer_chain = false
+
+[chains.packet_filter]
+policy = 'allow'
+list = [['transfer', '*']]
