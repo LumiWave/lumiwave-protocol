@@ -2,7 +2,7 @@
   "app_name": "lumiwave-protocold",
   "app_version": "0.0.7-testnet-0ed4f560",
   "genesis_time": "2026-01-29T01:49:40.818762Z",
-  "chain_id": "lumiwaveprotocol",
+  "chain_id": "lumiwaveprotocol-testnet",
   "initial_height": 1,
   "app_hash": null,
   "app_state": {
