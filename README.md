@@ -17,6 +17,7 @@ It is scaffolded using Ignite CLI and designed for extensible custom modules and
 - Build
 - Run a Local Node (Manual)
 - Testnet
+- TokenFactory
 - Cosmovisor Deployment
 - Releases
 - Docs
@@ -208,6 +209,30 @@ Update the following fields:
   Static peers that the node will continuously attempt to maintain connections with.
 
 Restart the node after updating the configuration.
+
+---
+
+## TokenFactory
+
+The `x/tokenfactory` module allows any account to create custom token denominations (e.g., `factory/lumi1.../MYTOKEN`).
+
+### Trust Model
+
+TokenFactory denominations are **admin-controlled assets**. The denom administrator has the following privileges:
+
+- **Mint** — Create new tokens without limit
+- **Burn** — Destroy tokens from any account
+- **Force Transfer** — Move tokens between accounts without holder consent
+- **Change Metadata** — Modify the denom name, symbol, and display information
+- **Transfer Admin** — Reassign admin rights to another address
+
+There is currently no admin-renounce function. Once created, a factory denom remains under admin control unless admin rights are transferred to another address.
+
+### Important Notice for Users and Integrators
+
+- Factory tokens (`factory/` prefix) should **not** be treated as trust-minimized or equivalent to the native chain asset (`ulwp`).
+- Holders of factory tokens are subject to the trust assumptions of the denom administrator.
+- Wallets, explorers, and exchanges integrating factory tokens should clearly distinguish them from native assets and inform users of the admin-controlled nature.
 
 ---
 
