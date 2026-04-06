@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/LumiWave/lumiwave-protocol/x/tokenfactory/types"
@@ -17,9 +19,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
 	for _, genDenom := range genState.GetFactoryDenoms() {
-		creator, _, err := types.DeconstructDenom(genDenom.GetDenom())
+		creator, subdenom, err := types.DeconstructDenom(genDenom.GetDenom())
 		if err != nil {
 			panic(err)
+		}
+		// reject genesis denoms whose subdenom collides with an existing native denom
+		if k.bankKeeper.HasSupply(ctx, subdenom) {
+			panic(fmt.Errorf("genesis denom %s has subdenom %s that collides with an existing native denom supply", genDenom.GetDenom(), subdenom))
 		}
 		err = k.createDenomAfterValidation(ctx, creator, genDenom.GetDenom())
 		if err != nil {
