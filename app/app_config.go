@@ -98,6 +98,9 @@ var (
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
 		nft.ModuleName,
+		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
+		wasmtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
