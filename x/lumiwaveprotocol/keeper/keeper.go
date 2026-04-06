@@ -17,7 +17,7 @@ type Keeper struct {
 	addressCodec address.Codec
 	// Address capable of executing a MsgUpdateParams message.
 	// Typically, this should be the x/gov module account.
-	authority []byte
+	authority string
 
 	Schema collections.Schema
 	Params collections.Item[types.Params]
@@ -29,7 +29,8 @@ func NewKeeper(
 	addressCodec address.Codec,
 	authority []byte,
 ) Keeper {
-	if _, err := addressCodec.BytesToString(authority); err != nil {
+	authorityStr, err := addressCodec.BytesToString(authority)
+	if err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
 	}
 
@@ -39,7 +40,7 @@ func NewKeeper(
 		storeService: storeService,
 		cdc:          cdc,
 		addressCodec: addressCodec,
-		authority:    authority,
+		authority:    authorityStr,
 		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
@@ -53,6 +54,6 @@ func NewKeeper(
 }
 
 // GetAuthority returns the module's authority.
-func (k Keeper) GetAuthority() []byte {
+func (k Keeper) GetAuthority() string {
 	return k.authority
 }
