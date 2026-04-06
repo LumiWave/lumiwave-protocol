@@ -42,7 +42,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 		authorityMetadata, err := k.GetAuthorityMetadata(ctx, denom)
 		if err != nil {
-			panic(err)
+			// prevent panic on nil/corrupt AuthorityMetadata during export
+			authorityMetadata = types.DenomAuthorityMetadata{}
 		}
 
 		genDenoms = append(genDenoms, types.GenesisDenom{
