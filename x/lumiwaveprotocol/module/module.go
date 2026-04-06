@@ -47,13 +47,24 @@ func calculateYearFromHeight(currentHeight, blocksPerYear int64) int {
 	return int((currentHeight-1)/blocksPerYear) + 1
 }
 
-func inflationMaxForYear(year int) math.LegacyDec {
+func inflationMaxForYear(year int) (math.LegacyDec, error) {
 	if maxRateStr, ok := InflationSchedule[year]; ok {
-		return math.LegacyMustNewDecFromStr(maxRateStr)
+		rate, err := math.LegacyNewDecFromStr(maxRateStr)
+		if err != nil {
+			return math.LegacyZeroDec(), fmt.Errorf("invalid inflation schedule for year %d: %w", year, err)
+		}
+		return rate, nil
 	}
 
 	if year > 6 {
-		baseRate := math.LegacyMustNewDecFromStr(InflationSchedule[6])
+		baseRateStr, ok := InflationSchedule[6]
+		if !ok {
+			return math.LegacyZeroDec(), fmt.Errorf("missing inflation schedule for year 6")
+		}
+		baseRate, err := math.LegacyNewDecFromStr(baseRateStr)
+		if err != nil {
+			return math.LegacyZeroDec(), fmt.Errorf("invalid inflation schedule for year 6: %w", err)
+		}
 		halfLifeCycles := (year - 5) / 2
 
 		// cap at 62 to prevent int64 overflow
@@ -65,10 +76,10 @@ func inflationMaxForYear(year int) math.LegacyDec {
 			denominator *= 2
 		}
 
-		return baseRate.Quo(math.LegacyNewDec(denominator))
+		return baseRate.Quo(math.LegacyNewDec(denominator)), nil
 	}
 
-	return math.LegacyZeroDec()
+	return math.LegacyZeroDec(), nil
 }
 
 func calculateYearAndTargetInflation(currentHeight int64, blocksPerYear uint64) (int, math.LegacyDec, error) {
@@ -81,7 +92,11 @@ func calculateYearAndTargetInflation(currentHeight int64, blocksPerYear uint64) 
 	}
 
 	year := calculateYearFromHeight(currentHeight, int64(blocksPerYear))
-	return year, inflationMaxForYear(year), nil
+	targetMax, err := inflationMaxForYear(year)
+	if err != nil {
+		return 0, math.LegacyZeroDec(), err
+	}
+	return year, targetMax, nil
 }
 
 // AppModule implements the AppModule interface that defines the inter-dependent methods that modules need to implement

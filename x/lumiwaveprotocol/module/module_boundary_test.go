@@ -59,7 +59,10 @@ func TestInflationMaxForYearBoundaries(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := inflationMaxForYear(tc.year)
+			got, err := inflationMaxForYear(tc.year)
+			if err != nil {
+				t.Fatalf("year %d: unexpected error: %v", tc.year, err)
+			}
 			want := math.LegacyMustNewDecFromStr(tc.expected)
 			if !got.Equal(want) {
 				t.Fatalf("year %d: expected %s, got %s", tc.year, want.String(), got.String())
