@@ -33,8 +33,7 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "contract keeper not configured")
 		}
 
-		// if a contract is being set, call the contract using cache context
-		// to test if the contract is an existing, valid contract.
+		// validate the contract exists and supports the full before-send hook interface
 		cacheCtx, _ := ctx.CacheContext()
 
 		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
@@ -42,17 +41,37 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 			return err
 		}
 
-		tempMsg := types.TrackBeforeSendSudoMsg{
+		// verify TrackBeforeSend support
+		trackMsg := types.TrackBeforeSendSudoMsg{
 			TrackBeforeSend: types.TrackBeforeSendMsg{},
 		}
-		msgBz, err := json.Marshal(tempMsg)
+		trackMsgBz, err := json.Marshal(trackMsg)
 		if err != nil {
 			return err
 		}
-		_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, msgBz)
+		_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, trackMsgBz)
+		if err != nil {
+			if strings.Contains(err.Error(), "no such contract") {
+				return err
+			}
+			return errorsmod.Wrapf(err, "contract does not support track_before_send")
+		}
 
-		if err != nil && strings.Contains(err.Error(), "no such contract") {
+		// verify BlockBeforeSend support
+		blockMsg := types.BlockBeforeSendSudoMsg{
+			BlockBeforeSend: types.BlockBeforeSendMsg{},
+		}
+		blockMsgBz, err := json.Marshal(blockMsg)
+		if err != nil {
 			return err
+		}
+		cacheCtx2, _ := ctx.CacheContext()
+		_, err = k.contractKeeper.Sudo(cacheCtx2, cwAddr, blockMsgBz)
+		if err != nil {
+			if strings.Contains(err.Error(), "no such contract") {
+				return err
+			}
+			return errorsmod.Wrapf(err, "contract does not support block_before_send")
 		}
 	}
 
