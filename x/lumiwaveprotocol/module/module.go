@@ -55,6 +55,10 @@ func inflationMaxForYear(year int) math.LegacyDec {
 		baseRate := math.LegacyMustNewDecFromStr(InflationSchedule[6])
 		halfLifeCycles := (year - 5) / 2
 
+		// cap at 62 to prevent int64 overflow
+		if halfLifeCycles > 62 {
+			halfLifeCycles = 62
+		}
 		denominator := int64(1)
 		for i := 0; i < halfLifeCycles; i++ {
 			denominator *= 2
