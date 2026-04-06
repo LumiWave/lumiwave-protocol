@@ -14,6 +14,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"strconv"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
@@ -220,15 +221,26 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to get mint minter (height=%d, year=%d): %w", currentHeight, year, err)
 		}
-		if minter.Inflation.GT(targetMax) {
+		inflationClipped := minter.Inflation.GT(targetMax)
+		if inflationClipped {
 			minter.Inflation = targetMax
 			if err := am.mintKeeper.Minter.Set(sdkCtx, minter); err != nil {
 				return fmt.Errorf("failed to set mint minter (height=%d, year=%d, target_max=%s): %w", currentHeight, year, targetMax.String(), err)
 			}
 		}
 
-		// Log the transition for auditing and monitoring
-		sdkCtx.Logger().Info("✅ Applied Year Transition and Halving",
+		// emit SDK event for indexers and block explorers
+		sdkCtx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				"inflation_schedule_transition",
+				sdk.NewAttribute("year", strconv.Itoa(year)),
+				sdk.NewAttribute("height", strconv.FormatInt(currentHeight, 10)),
+				sdk.NewAttribute("new_inflation_max", targetMax.String()),
+				sdk.NewAttribute("inflation_clipped", strconv.FormatBool(inflationClipped)),
+			),
+		)
+
+		sdkCtx.Logger().Info("Applied Year Transition and Halving",
 			"Year", year,
 			"NewMax", targetMax.String(),
 		)
