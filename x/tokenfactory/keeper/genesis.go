@@ -29,6 +29,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
+		// restore BeforeSendHook address if it was set
+		if genDenom.GetBeforeSendHook() != "" {
+			store := k.GetDenomPrefixStore(ctx, genDenom.GetDenom())
+			store.Set([]byte(types.BeforeSendHookAddressPrefixKey), []byte(genDenom.GetBeforeSendHook()))
+		}
 	}
 }
 
@@ -46,9 +51,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			authorityMetadata = types.DenomAuthorityMetadata{}
 		}
 
+		beforeSendHook := k.GetBeforeSendHook(ctx, denom)
+
 		genDenoms = append(genDenoms, types.GenesisDenom{
 			Denom:             denom,
 			AuthorityMetadata: authorityMetadata,
+			BeforeSendHook:    beforeSendHook,
 		})
 	}
 

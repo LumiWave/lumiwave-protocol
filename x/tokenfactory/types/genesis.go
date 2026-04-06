@@ -45,6 +45,13 @@ func (gs GenesisState) Validate() error {
 				return errorsmod.Wrapf(ErrInvalidAuthorityMetadata, "Invalid admin address (%s)", err)
 			}
 		}
+
+		if denom.BeforeSendHook != "" {
+			_, err = sdk.AccAddressFromBech32(denom.BeforeSendHook)
+			if err != nil {
+				return errorsmod.Wrapf(ErrInvalidGenesis, "Invalid before_send_hook address for denom %s: %s", denom.GetDenom(), err)
+			}
+		}
 	}
 
 	return nil
