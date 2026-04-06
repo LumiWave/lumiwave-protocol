@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -11,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -114,8 +117,6 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		app.BankKeeper,
 		app.DistrKeeper,
 	)
-	app.TokenFactoryKeeper.SetContractKeeper(app.WasmKeeper)
-
 	// create IBC module from bottom to top of stack
 	var (
 		transferStack      porttypes.IBCModule = ibctransfer.NewIBCModule(app.TransferKeeper)
@@ -139,6 +140,19 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		return err
 	}
 	ibcRouter.AddRoute(wasmtypes.ModuleName, wasmStack)
+
+	// SetContractKeeper must be called AFTER registerWasmModules
+	// so that app.WasmKeeper is fully initialized
+	app.TokenFactoryKeeper.SetContractKeeper(&app.WasmKeeper)
+
+	// wire TokenFactory BeforeSendHook into bank module's SendRestriction
+	app.BankKeeper.AppendSendRestriction(func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+		if err := app.TokenFactoryKeeper.Hooks().BlockBeforeSend(ctx, fromAddr, toAddr, amt); err != nil {
+			return toAddr, err
+		}
+		app.TokenFactoryKeeper.Hooks().TrackBeforeSend(ctx, fromAddr, toAddr, amt)
+		return toAddr, nil
+	})
 
 	// this line is used by starport scaffolding # ibc/app/module
 
