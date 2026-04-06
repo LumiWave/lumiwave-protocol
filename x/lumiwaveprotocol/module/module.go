@@ -74,6 +74,10 @@ func calculateYearAndTargetInflation(currentHeight int64, blocksPerYear uint64) 
 	if blocksPerYear == 0 {
 		return 0, math.LegacyZeroDec(), fmt.Errorf("blocks_per_year is zero")
 	}
+	// prevent overflow when casting uint64 to int64
+	if blocksPerYear > uint64(1<<63-1) {
+		return 0, math.LegacyZeroDec(), fmt.Errorf("blocks_per_year exceeds max int64")
+	}
 
 	year := calculateYearFromHeight(currentHeight, int64(blocksPerYear))
 	return year, inflationMaxForYear(year), nil
