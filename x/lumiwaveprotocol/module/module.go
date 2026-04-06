@@ -56,30 +56,27 @@ func inflationMaxForYear(year int) (math.LegacyDec, error) {
 		return rate, nil
 	}
 
-	if year > 6 {
-		baseRateStr, ok := InflationSchedule[6]
-		if !ok {
-			return math.LegacyZeroDec(), fmt.Errorf("missing inflation schedule for year 6")
-		}
-		baseRate, err := math.LegacyNewDecFromStr(baseRateStr)
-		if err != nil {
-			return math.LegacyZeroDec(), fmt.Errorf("invalid inflation schedule for year 6: %w", err)
-		}
-		halfLifeCycles := (year - 5) / 2
+	// year > 6: apply halving formula based on year-6 base rate
+	baseRateStr, ok := InflationSchedule[6]
+	if !ok {
+		return math.LegacyZeroDec(), fmt.Errorf("missing inflation schedule for year 6")
+	}
+	baseRate, err := math.LegacyNewDecFromStr(baseRateStr)
+	if err != nil {
+		return math.LegacyZeroDec(), fmt.Errorf("invalid inflation schedule for year 6: %w", err)
+	}
+	halfLifeCycles := (year - 5) / 2
 
-		// cap at 62 to prevent int64 overflow
-		if halfLifeCycles > 62 {
-			halfLifeCycles = 62
-		}
-		denominator := int64(1)
-		for i := 0; i < halfLifeCycles; i++ {
-			denominator *= 2
-		}
-
-		return baseRate.Quo(math.LegacyNewDec(denominator)), nil
+	// cap at 62 to prevent int64 overflow
+	if halfLifeCycles > 62 {
+		halfLifeCycles = 62
+	}
+	denominator := int64(1)
+	for i := 0; i < halfLifeCycles; i++ {
+		denominator *= 2
 	}
 
-	return math.LegacyZeroDec(), nil
+	return baseRate.Quo(math.LegacyNewDec(denominator)), nil
 }
 
 func calculateYearAndTargetInflation(currentHeight int64, blocksPerYear uint64) (int, math.LegacyDec, error) {

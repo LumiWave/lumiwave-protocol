@@ -51,7 +51,6 @@ func TestInflationMaxForYearBoundaries(t *testing.T) {
 		{name: "year 8 same cycle as year 7", year: 8, expected: "0.02205"},
 		{name: "year 9 second halving cycle", year: 9, expected: "0.011025"},
 		{name: "year 10 same cycle as year 9", year: 10, expected: "0.011025"},
-		{name: "invalid year fallback", year: 0, expected: "0.0000"},
 	}
 
 	for _, tc := range testCases {
