@@ -26,6 +26,7 @@ func NewRootCmd() *cobra.Command {
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
 		clientCtx          client.Context
+		txConfigOpts       tx.ConfigOptions
 	)
 
 	if err := depinject.Inject(
@@ -38,6 +39,7 @@ func NewRootCmd() *cobra.Command {
 		&autoCliOpts,
 		&moduleBasicManager,
 		&clientCtx,
+		&txConfigOpts,
 	); err != nil {
 		panic(err)
 	}
@@ -61,6 +63,15 @@ func NewRootCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			// rebuild TxConfig with the fully resolved clientCtx so that
+			// TextualCoinMetadataQueryFn uses the final --node/--home settings.
+			txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
+			txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithTxConfig(txConfig)
 
 			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
