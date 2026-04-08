@@ -302,8 +302,10 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 		panic(err)
 	}
 
-	// register app's OpenAPI routes.
-	docs.RegisterOpenAPIService(Name, apiSvr.Router)
+	// register app's OpenAPI routes only when Swagger is enabled.
+	if apiConfig.Swagger {
+		docs.RegisterOpenAPIService(Name, apiSvr.Router)
+	}
 }
 
 // GetMaccPerms returns a copy of the module account permissions
