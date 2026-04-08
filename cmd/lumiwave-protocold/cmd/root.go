@@ -12,6 +12,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,7 +27,6 @@ func NewRootCmd() *cobra.Command {
 		autoCliOpts        autocli.AppOptions
 		moduleBasicManager module.BasicManager
 		clientCtx          client.Context
-		txConfigOpts       tx.ConfigOptions
 	)
 
 	if err := depinject.Inject(
@@ -39,7 +39,6 @@ func NewRootCmd() *cobra.Command {
 		&autoCliOpts,
 		&moduleBasicManager,
 		&clientCtx,
-		&txConfigOpts,
 	); err != nil {
 		panic(err)
 	}
@@ -64,14 +63,20 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			// rebuild TxConfig with the fully resolved clientCtx so that
+			// ebuild TxConfig after CLI flags are applied so that
 			// TextualCoinMetadataQueryFn uses the final --node/--home settings.
-			txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
-			txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
-			if err != nil {
-				return err
+			// SIGN_MODE_TEXTUAL is only available when the client is online.
+			if !clientCtx.Offline {
+				txConfigOpts := tx.ConfigOptions{
+					EnabledSignModes:           append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL),
+					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx),
+				}
+				txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
+				if err != nil {
+					return err
+				}
+				clientCtx = clientCtx.WithTxConfig(txConfig)
 			}
-			clientCtx = clientCtx.WithTxConfig(txConfig)
 
 			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
 				return err
