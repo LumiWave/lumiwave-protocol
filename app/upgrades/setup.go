@@ -55,6 +55,7 @@ func Setup(deps Dependencies) error {
 		v1UpgradeLumiwaveProtocol(),
 		v009(),
 		v0010(deps),
+		v0012(),
 	}
 
 	for _, def := range definitions {

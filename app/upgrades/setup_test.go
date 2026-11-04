@@ -44,10 +44,11 @@ func TestSetup_RegistersHandlersAndRunsMigrations(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Len(t, upgradeKeeper.handlers, 3)
+	require.Len(t, upgradeKeeper.handlers, 4)
 	require.Contains(t, upgradeKeeper.handlers, nameV1UpgradeLumiwaveProtocol)
 	require.Contains(t, upgradeKeeper.handlers, nameV009)
 	require.Contains(t, upgradeKeeper.handlers, nameV0010)
+	require.Contains(t, upgradeKeeper.handlers, nameV0012)
 	require.Equal(t, 1, setStoreLoaderCalls)
 
 	fromVM := module.VersionMap{"foo": 1}
