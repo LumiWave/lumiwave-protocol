@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -33,45 +34,13 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "contract keeper not configured")
 		}
 
-		// validate the contract exists and supports the full before-send hook interface
-		cacheCtx, _ := ctx.CacheContext()
-
 		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
 		if err != nil {
 			return err
 		}
 
-		// verify TrackBeforeSend support
-		trackMsg := types.TrackBeforeSendSudoMsg{
-			TrackBeforeSend: types.TrackBeforeSendMsg{},
-		}
-		trackMsgBz, err := json.Marshal(trackMsg)
-		if err != nil {
+		if err := k.validateBeforeSendHookContract(ctx, cwAddr, denom); err != nil {
 			return err
-		}
-		_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, trackMsgBz)
-		if err != nil {
-			if strings.Contains(err.Error(), "no such contract") {
-				return err
-			}
-			return errorsmod.Wrapf(err, "contract does not support track_before_send")
-		}
-
-		// verify BlockBeforeSend support
-		blockMsg := types.BlockBeforeSendSudoMsg{
-			BlockBeforeSend: types.BlockBeforeSendMsg{},
-		}
-		blockMsgBz, err := json.Marshal(blockMsg)
-		if err != nil {
-			return err
-		}
-		cacheCtx2, _ := ctx.CacheContext()
-		_, err = k.contractKeeper.Sudo(cacheCtx2, cwAddr, blockMsgBz)
-		if err != nil {
-			if strings.Contains(err.Error(), "no such contract") {
-				return err
-			}
-			return errorsmod.Wrapf(err, "contract does not support block_before_send")
 		}
 	}
 
@@ -83,6 +52,68 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 	store.Set([]byte(types.BeforeSendHookAddressPrefixKey), []byte(cosmwasmAddress))
 
 	return nil
+}
+
+// validateBeforeSendHookContract calls the contract with well-formed hook messages in
+// discarded cache contexts, to confirm it can receive both of them.
+func (k Keeper) validateBeforeSendHookContract(ctx sdk.Context, cwAddr sdk.AccAddress, denom string) error {
+	trackMsg, blockMsg, err := beforeSendProbeMsgs(cwAddr.String(), denom)
+	if err != nil {
+		return err
+	}
+
+	cacheCtx, _ := ctx.CacheContext()
+	_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, trackMsg)
+	if err := checkBeforeSendProbe(err, "track_before_send"); err != nil {
+		return err
+	}
+
+	cacheCtx2, _ := ctx.CacheContext()
+	_, err = k.contractKeeper.Sudo(cacheCtx2, cwAddr, blockMsg)
+	return checkBeforeSendProbe(err, "block_before_send")
+}
+
+// beforeSendProbeMsgs builds the validation messages. The fields are well formed because
+// contracts usually parse amount as a Coin, which rejects an empty amount.
+func beforeSendProbeMsgs(contractAddr, denom string) (trackMsg, blockMsg []byte, err error) {
+	amount := wasmvmtypes.Coin{Denom: denom, Amount: "0"}
+
+	trackMsg, err = json.Marshal(types.TrackBeforeSendSudoMsg{
+		TrackBeforeSend: types.TrackBeforeSendMsg{From: contractAddr, To: contractAddr, Amount: amount},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	blockMsg, err = json.Marshal(types.BlockBeforeSendSudoMsg{
+		BlockBeforeSend: types.BlockBeforeSendMsg{From: contractAddr, To: contractAddr, Amount: amount},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return trackMsg, blockMsg, nil
+}
+
+// checkBeforeSendProbe decides whether a validation call shows the contract can handle the
+// hook message. An error returned by the contract's own handler is accepted, since it may
+// refuse the probe by policy. A parse failure on a well-formed message or a VM error is not:
+// a contract that cannot handle block_before_send would fail every transfer of the denom.
+func checkBeforeSendProbe(err error, hook string) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(err.Error(), "no such contract") {
+		return err
+	}
+
+	if wasmtypes.ErrExecuteFailed.Is(err) &&
+		!strings.Contains(err.Error(), "Error parsing into type") &&
+		!strings.Contains(err.Error(), "unknown variant") {
+		return nil
+	}
+
+	return errorsmod.Wrapf(err, "contract does not support %s", hook)
 }
 
 func (k Keeper) GetBeforeSendHook(ctx sdk.Context, denom string) string {
