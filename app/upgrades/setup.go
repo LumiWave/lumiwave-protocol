@@ -56,6 +56,7 @@ func Setup(deps Dependencies) error {
 		v009(),
 		v0010(deps),
 		v0012(),
+		v0013(),
 	}
 
 	for _, def := range definitions {
